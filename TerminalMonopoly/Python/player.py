@@ -25,7 +25,6 @@ def initialize():
     communicate(client_socket)
 
 def communicate(sock: socket.socket) -> None:
-    
     message = sock.recv(1024).decode('ascii')
     if message == "exit":
         sock.close()

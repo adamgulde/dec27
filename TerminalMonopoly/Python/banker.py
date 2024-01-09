@@ -42,6 +42,9 @@ def handle_client(client_socket):
     # print(f"Received: {request.decode('utf-8')}")
     # client_socket.close() # Eventually close the connection
 
+def update_clients(client_socket: socket.socket):
+    
+
 if __name__ == "__main__":
     initialize_terminal()
     start_server()
