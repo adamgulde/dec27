@@ -1,92 +1,126 @@
+# This file contains the logic for the terminal screen
+# Adam Gulde
+# Created 1/8/2024
+# Updated 1/11/2024
+
 # Terminal total width and height: 150x40
 # This matches the default Windows terminal size nicely.
 WIDTH = 150
 HEIGHT = 40
 import os
-import sys
+from colorama import Fore, Style, Back
 
 # Each quadrant is half the width and height of the screen 
-rows = int(HEIGHT/2)
-cols = int(WIDTH/2)
+rows = HEIGHT//2
+cols = WIDTH//2
 
 # Create the quadrants as 2D lists
-quadrant1 = [['1' for _ in range(cols)] for _ in range(rows)]
-quadrant2 = [['2' for _ in range(cols)] for _ in range(rows)]
-quadrant3 = [['3' for _ in range(cols)] for _ in range(rows)]
-quadrant4 = [['4' for _ in range(cols)] for _ in range(rows)]
+quadrant1 = ['1' * cols] * rows
+quadrant2 = ['2' * cols] * rows
+quadrant3 = ['3' * cols] * rows
+quadrant4 = ['4' * cols] * rows
+active_terminal = 1
 
-def update_quadrant1_char(x: int, y: int, char: str) -> None:
-    quadrant1[y][x] = char
+def update_quadrant(n: int, data: str):
+    # Creates a list of lines from the data string, 
+    # and pads each line with spaces to match the width of the screen
+    line_list = data.split('\n')
+    for i in range(len(line_list)):
+            line_list[i] = line_list[i] + ' ' * (cols - len(line_list[i]))
+    for i in range(len(line_list), rows):
+        line_list.append(' ' * cols)
+    match n:
+        case 1:
+            global quadrant1
+            quadrant1 = line_list
+        case 2:
+            global quadrant2
+            quadrant2 = line_list
+        case 3:
+            global quadrant3
+            quadrant3 = line_list
+        case 4:
+            global quadrant4
+            quadrant4 = line_list
 
-def update_quadrant2_char(x: int, y: int, char: str) -> None:
-    quadrant2[y][x] = char
+# Same as update_quadrant, but does not pad the lines with spaces.
+# String must be exactly the right length.
+# Useful for color formatting where update_quadrant fails.
+def update_quadrant_strictly(n: int, data: str):
+    line_list = data.split('\n')
+    match n:
+        case 1:
+            global quadrant1
+            quadrant1 = line_list
+        case 2:
+            global quadrant2
+            quadrant2 = line_list
+        case 3:
+            global quadrant3
+            quadrant3 = line_list
+        case 4:
+            global quadrant4
+            quadrant4 = line_list
 
-def update_quadrant3_char(x: int, y: int, char: str) -> None:    
-    quadrant3[y][x] = char  
+def update_active_terminal(n: int):
+    global active_terminal
+    active_terminal = n 
 
-def update_quadrant4_char(x: int, y: int, char: str) -> None:
-    quadrant4[y][x] = char
+# Writes text over 2nd to last line of the terminal (working line).
+def overwrite(text: str):
+    print(f'\033[1A\r{text}', end='')
 
-def update_quadrant1(quadrant: list[list[str]]) -> None:
-    global quadrant1
-    quadrant1 = quadrant
-
-def update_quadrant2(quadrant: list[list[str]]) -> None:
-    global quadrant2
-    quadrant2 = quadrant
-
-def update_quadrant3(quadrant: list[list[str]]) -> None:
-    global quadrant3
-    quadrant3 = quadrant
-
+# Naively clears the screen
 def clear_screen():
+    print(Style.RESET_ALL,end='')
     os.system('cls' if os.name == 'nt' else 'clear')
 
-# Naive implementation of printing the screen
+# This is such an ugly function but it works perfectly
+# and I am fairly sure it is very efficient. - 1/11/24
 def print_screen():
-    clear_screen()
-    print(' ' + '=' * (WIDTH+3))
+    # Resets cursor position to top left
+    print('\033[1A' * (HEIGHT + 4), end='\r')
+
+    print(Back.BLACK + Fore.LIGHTYELLOW_EX+(Fore.GREEN+'╔' if active_terminal == 1 else '╔')+('═' * (cols))+
+          (Fore.GREEN if active_terminal == 1 or active_terminal == 2 else Fore.LIGHTYELLOW_EX) +'╦'
+          +(Fore.GREEN if active_terminal == 2 else Fore.LIGHTYELLOW_EX)+('═' * (cols))+'╗' + Fore.LIGHTYELLOW_EX + "   ") # Additional spaces to fill remaining 3 columns
     for y in range(rows):
-        print('||', end='')
+        print((Fore.GREEN if active_terminal == 1 else Fore.LIGHTYELLOW_EX)+'║', end=Style.RESET_ALL) 
         for x in range(2 * cols):
             if x < cols:
                 print(quadrant1[y][x], end='')
             elif x == cols:
-                print('|' + quadrant2[y][x - cols], end='')
+                print((Fore.GREEN if active_terminal == 1 or active_terminal == 2 else Fore.LIGHTYELLOW_EX)+'║'+Style.RESET_ALL + quadrant2[y][x - cols], end='')
             else:
                 print(quadrant2[y][x - cols], end='')
-        print('||')
-    print(' ' + '-' * (WIDTH+3))
+        print((Fore.GREEN if active_terminal == 2 else Fore.LIGHTYELLOW_EX)+'║'+Style.RESET_ALL + "   ")
+    print((Fore.GREEN if active_terminal == 1 or active_terminal == 3 else Fore.LIGHTYELLOW_EX)+'╠' + '═' * (cols)
+          +Fore.GREEN + '╬' + (Fore.GREEN if active_terminal == 2 or active_terminal == 4 else Fore.LIGHTYELLOW_EX)+ '═' * (cols) + '╣' + Style.RESET_ALL + "   ")
     for y in range(rows):
-        print('||', end='')
+        print((Fore.GREEN if active_terminal == 3 else Fore.LIGHTYELLOW_EX)+'║', end=Style.RESET_ALL) 
         for x in range(2 * cols):
             if x < cols:
                 print(quadrant3[y][x], end='')
             elif x == cols:
-                print('|' + quadrant4[y][x - cols], end='')
+                print((Fore.GREEN if active_terminal == 3 or active_terminal == 4 else Fore.LIGHTYELLOW_EX)+'║'+Style.RESET_ALL + quadrant4[y][x - cols], end='')
             else:
                 print(quadrant4[y][x - cols], end='')
-        print('||')
-    print(' ' + '=' * (WIDTH+3))
-    sys.stdout.flush()
+        print((Fore.GREEN if active_terminal == 4 else Fore.LIGHTYELLOW_EX)+'║'+Style.RESET_ALL + "   ")
+    print((Fore.GREEN if active_terminal == 3 else Fore.LIGHTYELLOW_EX)+'╚' + '═' * (cols) + 
+          (Fore.GREEN if active_terminal == 3 or active_terminal == 4 else Fore.LIGHTYELLOW_EX) +'╩'
+            + (Fore.GREEN if active_terminal == 4 else Fore.LIGHTYELLOW_EX) + '═' * (cols) + '╝'+ Style.RESET_ALL + "   ")
+    # Fills the rest of the terminal
+    print(' ' * WIDTH, end='\r')
 
-print_screen()
 # Test 1 - Update all quadrants with different characters
-input("This visual test contains flashing images. Press enter to continue...")
-for i in range(cols):
-    for j in range(rows):
-        if(i < cols/2):
-            update_quadrant1_char(i, j, 'A')
-            update_quadrant2_char(i, j, 'B')
-            update_quadrant3_char(i, j, 'C')
-            update_quadrant4_char(i, j, 'D')
-        else:
-            update_quadrant1_char(i, j, 'A')
-            update_quadrant2_char(i, j, 'B')
-            update_quadrant3_char(i, j, 'C')
-            update_quadrant4_char(i, j, 'D')
-            update_quadrant1_char(i-cols, j, '1')
-            update_quadrant2_char(i-cols, j, '2')
-            update_quadrant3_char(i-cols, j, '3')
-            update_quadrant4_char(i-cols, j, '4')
-        print_screen()
+def test_1():
+    input("This visual test contains flashing images. Press enter to continue...")
+    quads = ['', '', '', '']
+    for row in range(rows):
+        for col in range(cols):
+            for i in range(0,4):
+                quads[i] += str(i)
+                update_quadrant(i+1, quads[i])
+            print_screen()
+        for i in range(4):
+            quads[i] += '\n'

@@ -43,7 +43,7 @@ def handle_client(client_socket):
     # client_socket.close() # Eventually close the connection
 
 def update_clients(client_socket: socket.socket):
-    
+    pass
 
 if __name__ == "__main__":
     initialize_terminal()

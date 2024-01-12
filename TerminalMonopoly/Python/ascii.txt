@@ -1,0 +1,43 @@
+   ___         
+ _|\  \__                          === HELP ===
+|\   ____\      Welcome to Terminal Monopoly!                           
+\ \  \___|_         
+ \ \_____  \    This help screen will assist you with all the commands
+  \|____|\  \   available in the TerminalMonopoly interface. 
+    ____\_\  \  
+   |\___    __\
+   \|___|\__\_|             Command List:                                 
+        \|__|   help - display this message                   ___
+                term <num> - switch active terminal         _|\  \__
+                  to num                                   |\   ____\
+                list - print a list of all property titles \ \  \___|_
+                calc - calculator module for basic          \ \_____  \ 
+                  arithmetic                                 \|____|\  \
+                deed <name> - access a property by name        ____\_\  \
+                  (accepts partial names)                     |\___    __\ 
+                                                              \|___|\__\_|  
+                                                                   \|__|                                             
+BREAK_TEXT
+                        === PROPERTY LIST ===
+
+Mediterranean Avenue <> Baltic Avenue
+Reading Railroad
+Oriental Avenue <> Vermont Avenue <> Conneticut Avenue
+
+Electric Company
+St. Charles Place <> States Avenue <> Virginia Avenue
+Pennsylvania Railroad
+St. James Place <> Tennessee Avenue <> New York Avenue
+
+Kentucky Avenue <> Indiana Avenue <> Illinois Avenue 
+B&O Railroad
+Atlantic Avenue <> Ventnor Avenue <> Marvin Gardens
+Water Works
+
+Pacific Avenue <> North Carolina Avenue <> Pennsylvania Avenue
+Short Line
+Park Place <> Boardwalk
+BREAK_TEXT
+ ______ ______ ______ ______ ______
+|______|______|______|______|______|
+BREAK_TEXT
