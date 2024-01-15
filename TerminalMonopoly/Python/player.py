@@ -35,8 +35,9 @@ def initialize():
             initialize()
     try:
         handshake(client_socket)
-    except:
-        n = input(Fore.RED+"Connection failed. Type 'exit' to quit or press enter to try again.\n"+Style.RESET_ALL)
+    except Exception as e:
+        print(e)
+        n = input(Fore.RED+"Handshake failed. Type 'exit' to quit or press enter to try again.\n"+Style.RESET_ALL)
         if n == "exit":
             quit()
         else:
@@ -45,9 +46,10 @@ def initialize():
 def handshake(sock: socket.socket) -> str:
     # Sockets should send and receive relatively simultaneously. 
     # As soon as the client connects, the server should send confirmation message.
-    sock.send(bytes("Connected!", 'utf-8'))
     message = sock.recv(1024).decode('utf-8')
+    print(message)
     if message == "Welcome to the game!":
+        sock.send(bytes("Connected!", 'utf-8'))
         return message
 
 # Display all information and commands available to the user, in quadrant 2.

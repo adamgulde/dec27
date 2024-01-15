@@ -1,6 +1,6 @@
 from colorama import Fore, Style, Back
 import screenspace as ss
-from player import get_graphics
+import style as s
 
 # Color literals for printing board
 COLORS = {"BROWN": "\033[38;5;94m",
@@ -59,14 +59,9 @@ def calculator() -> str:
     print(Style.RESET_ALL, end='')
     return response
     
-def __print_deed(k: str, data: list) -> str:
-    response = ""
-    
-    return response
-
 
 def deed(title: str) -> str:
-    divider = get_graphics()['divider']
+    divider = s.get_graphics()['divider']
     response = "PROPERTY LIST TERMINAL\n".center(ss.cols)
     """
     @properties
@@ -129,11 +124,9 @@ def deed(title: str) -> str:
               "Electric Company":       (150, 4, 10, -1, -1, 75, Fore.YELLOW),
               "Water Works":            (150, 4, 10, -1, -1, 75, Fore.CYAN)
               }
-    exists = False
     for key in properties:
         if key.lower().startswith(title.lower()):
             data = properties.get(key)
-            exists = True
             break
         else: 
             data = None  
@@ -141,14 +134,13 @@ def deed(title: str) -> str:
     for sp_key in special_properties:
         if sp_key.lower().startswith(title.lower()):
             special_data = special_properties.get(sp_key)
-            exists = True
             break
         else: 
             special_data = None
     
     if data is not None:
         response += f"""{data[9]}
-        {divider}
+ {divider}
     === {key} ===
     Purchase Price: {data[0]}
     Price Per House: {data[1]}
@@ -159,11 +151,11 @@ def deed(title: str) -> str:
     Rent w 4 houses: {data[6]}
     Rent w hotel: {data[7]}
     Mortgage Value: {data[8]}
-        {divider}
+ {divider}
         """
     elif special_data is not None:
         response += f"""{special_data[6]}
-        {divider}
+ {divider}
     === {sp_key} ===
     Purchase Price: {special_data[0]}
     Rent (or multiplier) with 1 locations owned: {special_data[1]}
@@ -171,7 +163,7 @@ def deed(title: str) -> str:
     Rent (or multiplier) with 3 locations owned: {special_data[3]}
     Rent (or multiplier) with 4 locations owned: {special_data[4]}
     Mortgage Value: {special_data[5]}
-        {divider}
+{divider}
         """
     else:
         response += Fore.RED + "Unrecognized property!"
@@ -196,3 +188,11 @@ def attack():
 def stocks():
     pass
 
+def kill() -> str:
+    return s.get_graphics()['skull']
+
+def disable() -> str:
+    result = ('X ' * round(ss.cols/2+0.5) + '\n' + 
+                (' X' * round(ss.cols/2+0.5)) + '\n'
+                 ) * (ss.rows//2)
+    return result
