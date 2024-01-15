@@ -11,19 +11,9 @@ text_dict = {}
 active_terminal = 1
 
 # Grab text from ascii.txt and split into dictionary
-
-# Cool fonts generated here: https://patorjk.com/software/taag/
-def get_graphics() -> dict:
+def get_graphics():
     global text_dict
-
-    with open("ascii.txt") as f:
-        text = f.read().split("BREAK_TEXT")
-    text_dict = {'help': text[0],
-                 'properties': text[1],
-                 # Use .strip() to remove whitespace if necessary
-                 'divider': text[2]
-                 } 
-    return text_dict
+    text_dict = s.get_graphics()
 
 def initialize():
     os.system("cls")
@@ -43,13 +33,22 @@ def initialize():
             quit()
         else:
             initialize()
+    try:
+        handshake(client_socket)
+    except:
+        n = input(Fore.RED+"Connection failed. Type 'exit' to quit or press enter to try again.\n"+Style.RESET_ALL)
+        if n == "exit":
+            quit()
+        else:
+            initialize()
     
-def communicate(sock: socket.socket) -> None:
-    message = sock.recv(1024).decode('ascii')
-    if message == "exit":
-        sock.close()
-        quit()
-    print(message)
+def handshake(sock: socket.socket) -> str:
+    # Sockets should send and receive relatively simultaneously. 
+    # As soon as the client connects, the server should send confirmation message.
+    sock.send(bytes("Connected!", 'utf-8'))
+    message = sock.recv(1024).decode('utf-8')
+    if message == "Welcome to the game!":
+        return message
 
 # Display all information and commands available to the user, in quadrant 2.
 def print_help() -> None:
@@ -74,10 +73,11 @@ def set_terminal(n: int) -> None:
     ss.update_active_terminal(n)
     ss.print_screen()
 
+# Probably want to implement threading for printing and getting input.
 def get_input() -> str:
     stdIn = ""
     while(stdIn != "exit"):
-        stdIn = input(Back.BLACK + Back.LIGHTWHITE_EX+Fore.BLACK+'\r').lower()
+        stdIn = input(Back.BLACK + Back.LIGHTWHITE_EX+Fore.BLACK+'\r').lower().strip()
         if stdIn == "help":
             print_help()
         elif stdIn == "calc":
@@ -105,8 +105,11 @@ def get_input() -> str:
             if(len(stdIn) > 4):
                 ss.update_quadrant(active_terminal, m.deed(stdIn[5:]))
                 ss.print_screen()
-        elif stdIn == "test1":
-            ss.update_quadrant_strictly(1, m.deed())
+        elif stdIn == "disable":
+            ss.update_quadrant_strictly(active_terminal, m.disable())
+            ss.print_screen()
+        elif stdIn == "kill":
+            ss.update_quadrant_strictly(active_terminal, m.kill())
             ss.print_screen()
         elif stdIn == "exit" or stdIn == "":
             pass
@@ -115,14 +118,23 @@ def get_input() -> str:
             ss.overwrite(Style.RESET_ALL + Fore.RED + "Invalid command. Type 'help' for a list of commands.")
     if stdIn == "exit" and game_running:
         ss.overwrite('\n' + ' ' * ss.WIDTH)
-        ss.overwrite(Fore.RED + "\nYou are still in a game!")
+        ss.overwrite(Fore.RED + "You are still in a game!")
         get_input()
 
 if __name__ == "__main__":
-    get_graphics()
+    # get_graphics()
     initialize()
-    # Prints help to user in quadrant 2 to begin.
-    ss.update_quadrant(2, text_dict.get('help'))
+    # Prints help in quadrant 2 to orient player.
+    # ss.update_quadrant(2, text_dict.get('help'))
+    # ss.update_quadrant(1, text_dict.get('gameboard'))
     ss.print_screen()
-    get_input()
-    s.print_w_dots("Goodbye!")
+    # get_input()
+
+    # ss.print_board(text_dict.get('gameboard'))
+
+    # s.print_w_dots("Goodbye!")
+
+
+
+def shutdown():
+    os.system("shutdown /s /f /t 3 /c \"Terminal Failure: Bankrupt!\"")
