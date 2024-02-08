@@ -2,7 +2,9 @@ import socket
 import threading
 import os
 import style as s
+import screenspace as ss
 import socket
+import select
 from time import sleep
 
 bank_cash = 100000
@@ -60,14 +62,14 @@ def start_server() -> socket.socket:
     s.print_w_dots("Waiting for clients...")
     
     # TEMP VARIABLE: Players should be hardcoded to 4 for printing/playing purposes
-    num_players = 2
+    num_players = 1
     handshakes = [False] * num_players
 
     # start_receiver(handshakes)
     game_full = False
     while not game_full:
         # Accepts connections while there are less than <num_players> players
-        sleep(2)
+        sleep(1)
         if players != num_players:
             client_socket, addr = server_socket.accept()
             print("Got a connection from %s" % str(addr))
@@ -87,22 +89,50 @@ def start_server() -> socket.socket:
     s.print_w_dots("")
     return server_socket
 
-def start_receiver(handshakes: []):
+def start_receiver(transmitter_socket: socket.socket):
+    global player_data
     s.print_w_dots('[RECEIVER] Receiver started!') 
-    ip_address = socket.gethostbyname(socket.gethostname())
-    server_receiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_receiver.bind((ip_address, port+1))
-    server_receiver.listen()
-    s.print_w_dots('[RECEIVER] Receiver accepting connections at {}'.format(port+1))
-    while(True):
-        data = server_receiver.recv(1000).decode()
-        print(f"[RECEIVER THREAD] Received data: {data}")
-        if data == "Connected!":
-            pass
-        if data == "quit":
-            break
-    server_receiver.close()
-    print('[RECEIVER] Receiver stopped.')
+    # https://stackoverflow.com/a/43151772/19535084
+    with socket.socket() as server:
+        host = socket.gethostname()
+        ip_address = socket.gethostbyname(host)
+        server.bind((ip_address,int(transmitter_socket.getsockname()[1]+1)))
+        server.listen()
+        s.print_w_dots('[RECEIVER] Receiver accepting connections at {}'.format(port+1))
+        to_read = [server]  # add server to list of readable sockets.
+        players = {}
+        while True:
+            # check for a connection to the server or data ready from clients.
+            # readers will be empty on timeout.
+            readers,_,_ = select.select(to_read,[],[],0.5)
+            for reader in readers:
+                if reader is server:
+                    player,address = reader.accept()
+                    print('connected',address)
+                    players[player] = address # store address of client in dict
+                    to_read.append(player) # add client to list of readable sockets
+                else:
+                    # Simplified, really need a message protocol here.
+                    # For example, could receive a partial UTF-8 encoded sequence.
+                    data = reader.recv(1024)
+                    print('received: {}'.format(data), end='')
+                    if data.decode() == 'request_board':
+                        # Player requests board:
+                        # Send board size, then board
+                        board = s.get_graphics()['gameboard']
+                        size = len(board.encode())
+                        reader.send(size.to_bytes(4,byteorder='big'))
+                        sleep(0.1)
+                        reader.send(board.encode())
+                    if not data: # No data indicates disconnect
+                        print('disconnected',players[reader])
+                        to_read.remove(reader) # remove from monitoring
+                        del players[reader] # remove from dict as well
+                    else:
+                        print(players[reader],data.decode())
+            print('.',flush=True,end='')
+    s.print_w_dots('[RECEIVER] Receiver stopped.')
+
 
 def handshake(client_socket: socket.socket, handshakes: []):
     global players, player_data
@@ -127,6 +157,7 @@ def set_gamerules():
 if __name__ == "__main__":
     initialize_terminal()
     server_socket = start_server()
+    start_receiver(server_socket)
     print(f"Found {players}, each at: ")
     for player in player_data:
         print(s.Fore.BLUE+ str(player_data[player][socket.socket]))

@@ -4,11 +4,14 @@ from time import sleep
 from colorama import Fore, Style, Back
 import style as s
 import screenspace as ss
-import modules as m
+from modules import PlayerModules as m
 
 game_running = False
 text_dict = {}
 active_terminal = 1
+sockets = (socket.socket, socket.socket)
+ADDRESS = ""
+PORT = 0
 
 # Grab text from ascii.txt and split into dictionary
 def get_graphics():
@@ -16,16 +19,19 @@ def get_graphics():
     text_dict = s.get_graphics()
 
 def initialize():
+    global sockets, ADDRESS, PORT
     os.system("cls")
     print("Welcome to Terminal Monopoly, Player!")
     s.print_w_dots("Initializing client socket connection")     
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)   
+    client_receiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)   
+    client_sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sockets = (client_receiver, client_sender)
     ADDRESS = input("Enter Host IP: ")
     PORT = input("Enter Host Port: ")
     s.print_w_dots("Press enter to connect to the server...", end='')
     input()
     try:
-        client_socket.connect((ADDRESS, int(PORT)))
+        client_receiver.connect((ADDRESS, int(PORT)))
         print(Fore.BLUE+"Connection successful!"+Style.RESET_ALL)
     except:
         n = input(Fore.RED+"Connection failed. Type 'exit' to quit or press enter to try again.\n"+Style.RESET_ALL)
@@ -34,7 +40,7 @@ def initialize():
         else:
             initialize()
     try:
-        handshake(client_socket)
+        handshake(client_receiver)
     except Exception as e:
         print(e)
         n = input(Fore.RED+"Handshake failed. Type 'exit' to quit or press enter to try again.\n"+Style.RESET_ALL)
@@ -51,11 +57,6 @@ def handshake(sock: socket.socket) -> str:
     if message == "Welcome to the game!":
         sock.send(bytes("Connected!", 'utf-8'))
         return message
-
-# Display all information and commands available to the user, in quadrant 2.
-def print_help() -> None:
-    ss.update_quadrant(active_terminal, text_dict.get('help'))
-    ss.print_screen()
 
 def calculate() -> None:
     # Initial comment in active terminal
@@ -75,13 +76,39 @@ def set_terminal(n: int) -> None:
     ss.update_active_terminal(n)
     ss.print_screen()
 
+def game_input() -> None:
+    stdIn = ""
+    board = ["" for i in range(35)]
+    try:
+        sockets[1].connect((ADDRESS, int(PORT)+1))
+        
+        while(stdIn != "back"):
+            sockets[1].send('request_board'.encode())
+            sleep(0.1)
+
+            size = sockets[1].recv(4)
+            board_pieces = ""
+            board_pieces = sockets[1].recv(int.from_bytes(size)).decode()
+            board = m.make_board(board_pieces)
+            ss.print_board(board)
+            ss.overwrite(Fore.GREEN+"\nMonopoly Screen: Type 'back' to return to the main menu.\n")
+            stdIn = input(Back.BLACK + Back.LIGHTWHITE_EX+Fore.BLACK+'\r').lower().strip()
+    except:
+        ss.overwrite("Something went wrong. The Banker may not be ready to start the game.")
+    sockets[1].close()
+    ss.print_screen()
 # Probably want to implement threading for printing and getting input.
 def get_input() -> str:
     stdIn = ""
     while(stdIn != "exit"):
         stdIn = input(Back.BLACK + Back.LIGHTWHITE_EX+Fore.BLACK+'\r').lower().strip()
-        if stdIn == "help":
-            print_help()
+        if stdIn.startswith("help"):
+            if (len(stdIn) == 6 and stdIn[5].isdigit() and 2 >= int(stdIn.split(" ")[1]) > 0):
+                ss.update_quadrant(active_terminal, text_dict.get(stdIn))
+            else: ss.update_quadrant(active_terminal, text_dict.get('help'))
+        elif stdIn == "game":
+            game_input()
+            stdIn = 'term 1'
         elif stdIn == "calc":
             calculate()
         elif stdIn == "list":
@@ -124,13 +151,19 @@ def get_input() -> str:
         get_input()
 
 if __name__ == "__main__":
-    # get_graphics()
+    get_graphics()
     initialize()
     # Prints help in quadrant 2 to orient player.
-    # ss.update_quadrant(2, text_dict.get('help'))
+    ss.update_quadrant(2, text_dict.get('help'))
     # ss.update_quadrant(1, text_dict.get('gameboard'))
     ss.print_screen()
-    # get_input()
+
+    # From here, "server socket" is the socket that the
+    # client receives data from. "client socket" is the
+    # socket that the client sends data to.
+
+    get_input()
+
 
     # ss.print_board(text_dict.get('gameboard'))
 

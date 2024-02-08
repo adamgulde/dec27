@@ -19,5 +19,6 @@ def get_graphics() -> dict:
                  'divider': text[2].lstrip(),
                  'skull': text[3].lstrip(),
                  'gameboard': bytes(text[4].lstrip(), 'utf-8').decode('unicode_escape').encode('latin-1').decode('utf-8'),
+                 'help 2': text[5],
                  } 
     return text_dict
