@@ -17,6 +17,7 @@ class PlayerModules():
             "LIGHTGRAY": "\033[38;5;7m"}
 
     def calculator() -> str:
+        # Use stack to make a multi-operator calculator! 
         response = '\nCALCULATOR TERMINAL\n'.center(ss.cols)
         digit_result = 0
         operator = ''
@@ -64,21 +65,6 @@ class PlayerModules():
     def deed(title: str) -> str:
         divider = s.get_graphics()['divider']
         response = "PROPERTY LIST TERMINAL\n".center(ss.cols)
-        """
-        @properties
-        Key: title
-        Value: tuple with values as follows:
-            0 - Purchase Price
-            1 - Price Per House
-            2 - Rent
-            3 - Rent w 1 House
-            4 - Rent w 2 House
-            5 - Rent w 3 House
-            6 - Rent w 4 House
-            7 - Rent w Hotel
-            8 - Mortgage Value
-            9 - Color Code
-        """
         properties = {"Mediterranean Avenue": (60, 50, 2, 10, 30, 90, 160, 250, 30, "\033[38;5;94m"),
                     "Baltic Avenue":          (60, 50, 4, 20, 60, 180, 320, 450, 30, "\033[38;5;94m"),
                     "Oriental Avenue":        (100, 50, 6, 30, 90, 270, 400, 550, 50, "\033[38;5;117m"),
@@ -102,6 +88,20 @@ class PlayerModules():
                     "Park Place":             (350, 200, 35, 175, 500, 1100, 1300, 1500, 175, Fore.BLUE),
                     "Boardwalk":              (400, 200, 50, 200, 600, 1400, 1700, 2000, 200, Fore.BLUE)
                     }
+        """dict[str, tuple]: properties
+        Key: title
+        Value: tuple with values as follows:
+            0 - Purchase Price
+            1 - Price Per House
+            2 - Rent
+            3 - Rent w 1 House
+            4 - Rent w 2 House
+            5 - Rent w 3 House
+            6 - Rent w 4 House
+            7 - Rent w Hotel
+            8 - Mortgage Value
+            9 - Color Code
+        """
         """
         @RR_VALUES constants for the purchase, rent, mortgage, and color code values of the railroads
         """

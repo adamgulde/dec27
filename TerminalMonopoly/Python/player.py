@@ -13,12 +13,24 @@ sockets = (socket.socket, socket.socket)
 ADDRESS = ""
 PORT = 0
 
-# Grab text from ascii.txt and split into dictionary
 def get_graphics():
+    """Grab text from ascii.txt and split into dictionary"""
     global text_dict
     text_dict = s.get_graphics()
 
 def initialize():
+    """
+    Initialize client receiver and sender network sockets, attempts to connect to a Banker by looping, then handshakes banker.
+
+    ### This may be unnecessary: fix as necessary.
+    Creates two sockets, a receiver and sender at the same address.
+
+    Updates the ADDRESS and PORT class variables by taking in player input. Calls itself until a successful connection. 
+    Then calls handshake() to confirm player is connected to Banker and not some other address. 
+
+    Parameters: None
+    Returns: None
+    """
     global sockets, ADDRESS, PORT
     os.system("cls")
     print("Welcome to Terminal Monopoly, Player!")
@@ -57,6 +69,8 @@ def handshake(sock: socket.socket) -> str:
     if message == "Welcome to the game!":
         sock.send(bytes("Connected!", 'utf-8'))
         return message
+    else:
+        s.print_w_dots(Fore.RED+"Handshake failed. Reason: Connected to wrong foreign socket.")
 
 def calculate() -> None:
     # Initial comment in active terminal
@@ -97,6 +111,7 @@ def game_input() -> None:
         ss.overwrite("Something went wrong. The Banker may not be ready to start the game.")
     sockets[1].close()
     ss.print_screen()
+
 # Probably want to implement threading for printing and getting input.
 def get_input() -> str:
     stdIn = ""
@@ -168,8 +183,6 @@ if __name__ == "__main__":
     # ss.print_board(text_dict.get('gameboard'))
 
     # s.print_w_dots("Goodbye!")
-
-
 
 def shutdown():
     os.system("shutdown /s /f /t 3 /c \"Terminal Failure: Bankrupt!\"")

@@ -1,10 +1,12 @@
 # This file contains the logic for the terminal screen
 # Adam Gulde
 # Created 1/8/2024
-# Updated 1/19/2024
+# Updated 2/7/2024
 
+#TODO rewrite into classes: player & banker
 # Terminal total width and height: 150x40
 # This matches the default Windows terminal size nicely.
+# os.get_terminal_size() should be looked into. 
 WIDTH = 150
 HEIGHT = 40
 import os
@@ -23,25 +25,34 @@ quadrant3 = ['3' * cols] * rows
 quadrant4 = ['4' * cols] * rows
 active_terminal = 1
 
-# Columns are used when printing gameboard with player information.
-col_len = 20
-col1 = ""
-col2 = ""
-col3 = ""
+def print_board(gameboard: list[str]) -> None:
+    """
+    Used in printing the gameboard for the player. Overwrites the current screen to display the gameboard. 
+    
+    Parameters: 
+    gameboard (list[str]): A representation of the gameboard as a list of strings. 
 
-def print_board(gameboard: list[str]):
-    clear_screen()
+    Returns: None
+    """
+    # clear_screen()
+    # Resets cursor position to top left
+    print("\033[1A" * (HEIGHT + 4), end='\r')
          
     for y in range(len(gameboard)):
         print(gameboard[y])
-        #    for x in range(WIDTH):
-        #         if(x < len(gameboard[y])):
-        #             print(gameboard[y][x], end='')
     
 
-def update_quadrant(n: int, data: str):
-    # Creates a list of lines from the data string, 
-    # and pads each line with spaces to match the width of the screen
+def update_quadrant(n: int, data: str) -> None:
+    """
+    Creates a list of lines from the data string, and pads each line with spaces to match the width of the screen. 
+
+    Parameters: 
+    n (int): Quadrant number (1-4)
+    data (str): String data to update quadrant. Separate lines must be indicated by \\n. 
+
+    Returns: None
+
+    """
     line_list = data.split('\n')
     for i in range(len(line_list)):
             line_list[i] = line_list[i] + ' ' * (cols - len(line_list[i]))
@@ -61,10 +72,18 @@ def update_quadrant(n: int, data: str):
             global quadrant4
             quadrant4 = line_list
 
-# Same as update_quadrant, but does not pad the lines with spaces.
-# String must be exactly the right length.
-# Could be useful for color formatting where update_quadrant fails.
 def update_quadrant_strictly(n: int, data: str):
+    """ 
+    Same as update_quadrant, but does not pad the lines with spaces.
+    
+    Could be useful for color formatting where update_quadrant fails.
+
+    Parameters:
+    n (int): Quadrant number (1-4)
+    data (str): Data to update quadrant. String must be exactly the right length. (i.e. 75*20)
+
+    Returns: None
+    """
     line_list = data.split('\n')
     match n:
         case 1:
@@ -81,21 +100,56 @@ def update_quadrant_strictly(n: int, data: str):
             quadrant4 = line_list
 
 def update_active_terminal(n: int):
+    """
+    Updates the active terminal to the given number.
+
+    Parameters:
+    n (int): The terminal number to set as active.
+    
+    Returns: None
+    """
     global active_terminal
     active_terminal = n 
 
-# Writes text over 2nd to last line of the terminal (working line).
-def overwrite(text: str = ''):
+def overwrite(text: str = ""):
+    """
+    Writes text over 2nd to last line of the terminal (input line).
+    
+    Use this method regularly.
+    
+    Parameters: 
+    text (str): The text to overwrite with. Default is empty string.
+
+    Returns: None
+    """
     print(f'\033[1A\r{text}', end='')
 
-# Naively clears the screen
 def clear_screen():
+    """
+    Naively clears the terminal screen.
+
+    Parameters: None
+    Returns: None
+    """
     print(Style.RESET_ALL,end='')
     os.system('cls' if os.name == 'nt' else 'clear')
 
-# This is such an ugly function but it works perfectly
-# and I am fairly sure it is very efficient. - 1/11/24
-def print_screen():
+def print_screen() -> None:
+    """
+    This function overwrites the previous terminal's display. 
+    
+    Because Terminal Monopoly is not supposed to 
+    repeatedly print lines after lines (there should be no scrollbar in the terminal), this function overwrites 
+    all needed information. 
+    
+    The class variables quadrant1, quadrant2, etc. are iterated through to print each character. Because
+    splitting the terminal is entirely artificial to this program, it stops at a hardcoded width value and 
+    begins printing the next quadrant.  
+    
+    Parameters: None
+    Returns: None
+    """
+
     # Resets cursor position to top left
     print("\033[1A" * (HEIGHT + 4), end='\r')
     # Prints the top border, with ternary conditions if terminal 1 or 2 are active
@@ -131,15 +185,15 @@ def print_screen():
                 print(quadrant4[y][x - cols], end='')
         print((Fore.GREEN if active_terminal == 4 else Fore.LIGHTYELLOW_EX)+'║'+Style.RESET_ALL + "   ")
     
-    # Print final row, with ternary conditions of course
+    # Print final row
     print((Fore.GREEN if active_terminal == 3 else Fore.LIGHTYELLOW_EX)+'╚' + '═' * (cols) + 
           (Fore.GREEN if active_terminal == 3 or active_terminal == 4 else Fore.LIGHTYELLOW_EX) +'╩'
             + (Fore.GREEN if active_terminal == 4 else Fore.LIGHTYELLOW_EX) + '═' * (cols) + '╝'+ Style.RESET_ALL + "   ")
     # Fills the rest of the terminal
     print(' ' * WIDTH, end='\r')
 
-# Test 1 - Update all quadrants with different characters
 def test_1():
+    """Test 1 - Update all quadrants with different characters"""
     input("This visual test contains flashing images. Press enter to continue...")
     quads = ['', '', '', '']
     for row in range(rows):
@@ -152,7 +206,14 @@ def test_1():
             quads[i] += '\n'
 
 
+#TODO separate banker and player printing into separate classes
 ### Banker Printing below ### 
+
+# Columns are used when printing gameboard with player information.
+col_len = 20
+col1 = ""
+col2 = ""
+col3 = ""
 
 left_data = list[str]
 right_data = list[str]
@@ -171,4 +232,4 @@ def right_print_data() -> list[str]:
 
 def print_terminal(left_data: list[str], right_data: list[str]):
     for i in range(HEIGHT):
-        print(line)
+        print(left_data)
